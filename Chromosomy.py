@@ -46,7 +46,6 @@ def createGeneration(lines, k, NumberOfLines):
     AverageOfAGeneration = 0
     
     Gen = 0
-    #ReversedLines = lines.reverse()
     for line in reversed(lines):
         if line[0] == "-":
             Gen += 1
@@ -75,8 +74,6 @@ def createGeneration(lines, k, NumberOfLines):
 
             for word in lines[IndividualToReproduce_A.getNo()].split():
                 IndividualToReproduce_A.append(word)
-            print(AdjustFunction(IndividualToReproduce_A.getList()) * 100 / AverageOfAGeneration)
-            print(SelectionFunction(AdjustFunction(IndividualToReproduce_A.getList()), AverageOfAGeneration))
             if SelectionFunction(AdjustFunction(IndividualToReproduce_A.getList()), AverageOfAGeneration) == 2:
                 break
             else:
