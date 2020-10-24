@@ -1,4 +1,4 @@
-from random import seed
+from random import randint
 from random import uniform 
 
 class Individual:
@@ -6,6 +6,9 @@ class Individual:
         self.InternalList = []
         self.No = No
     
+    def getNo(self):
+        return self.No
+
     def append(self, Element):
         self.InternalList.append(Element)
     
@@ -28,59 +31,71 @@ def AdjustFunction(List):
 
     return AdjustValue ** 2
 
-def SelectionFunction(AdjustValue, SumOfAGeneration):
-    x = AdjustValue * 100 / SumOfAGeneration
-    if x < 5 or x > 75:
+def SelectionFunction(AdjustValue, AverageOfAGeneration):
+    x = AdjustValue * 100 / AverageOfAGeneration
+    if x < 50:
         return 0 # Individual dies
-    if ( x >= 5 and x < 25 ) or ( x > 50 and x <= 75 ):
+    if ( x >= 50 and x < 95 ):
         return 1 # Individual lives but not reproduce
-    if ( x >= 25 or x <= 50 ):
+    if ( x >= 95 ):
         return 2 # Individual reproduces
 
-def createGeneration(lines, k, g, ActualGeneration, NumberOfLines):
+def createGeneration(lines, k, NumberOfLines):
     GenerationLength = 0
     SumOfAGeneration = 0
-
-    for line in lines:
+    AverageOfAGeneration = 0
+    
+    Gen = 0
+    #ReversedLines = lines.reverse()
+    for line in reversed(lines):
         if line[0] == "-":
-            ActualGeneration += 1
-            if ActualGeneration == g:
+            Gen += 1
+            if Gen == 2:
                 break
+            else:
+                GenerationLength = 0
         GenerationLength += 1
+    GenerationLength -= 1
 
-    i = NumberOfLines
-    while i < (NumberOfLines + GenerationLength):
+    i = NumberOfLines - GenerationLength
+    
+    while i < (NumberOfLines - 1):
         TempIndividual = []
         for word in lines[i].split():
             TempIndividual.append(word)
         SumOfAGeneration += AdjustFunction(TempIndividual)
         i += 1
-
+    AverageOfAGeneration = SumOfAGeneration / GenerationLength
     ReproductionNumber = 0
+
     while ReproductionNumber < k:
 
         while True:
-            IndividualToReproduce_A = Individual(int(uniform(NumberOfLines, GenerationLength + NumberOfLines)))
-            for word in lines[IndividualToReproduce_A.No].split():
+            IndividualToReproduce_A = Individual(randint(NumberOfLines - GenerationLength, NumberOfLines - 2))
+
+            for word in lines[IndividualToReproduce_A.getNo()].split():
                 IndividualToReproduce_A.append(word)
-            if SelectionFunction(AdjustFunction(IndividualToReproduce_A.getList()), SumOfAGeneration) == 2:
+            print(AdjustFunction(IndividualToReproduce_A.getList()) * 100 / AverageOfAGeneration)
+            print(SelectionFunction(AdjustFunction(IndividualToReproduce_A.getList()), AverageOfAGeneration))
+            if SelectionFunction(AdjustFunction(IndividualToReproduce_A.getList()), AverageOfAGeneration) == 2:
                 break
             else:
                 del IndividualToReproduce_A
-
+        
         while True:
-            IndividualToReproduce_B = Individual(int(uniform(NumberOfLines, GenerationLength + NumberOfLines)))
-            for word in lines[IndividualToReproduce_B.No].split():
+            IndividualToReproduce_B = Individual(randint(NumberOfLines - GenerationLength, NumberOfLines - 2))
+            
+            for word in lines[IndividualToReproduce_B.getNo()].split():
                 IndividualToReproduce_B.append(word)
-            if SelectionFunction(AdjustFunction(IndividualToReproduce_B.getList()), SumOfAGeneration) == 2 and IndividualToReproduce_B.No != IndividualToReproduce_A.No:
+            if SelectionFunction(AdjustFunction(IndividualToReproduce_B.getList()), AverageOfAGeneration) == 2 and IndividualToReproduce_B.No != IndividualToReproduce_A.No:
                 break
             else:
                 del IndividualToReproduce_B
 
         
         NewIndividual = []
-        ChromosomeCrack_A = int(uniform(0, IndividualToReproduce_A.getLength()))
-        ChromosomeCrack_B = int(uniform(0, IndividualToReproduce_B.getLength()))
+        ChromosomeCrack_A = randint(0, IndividualToReproduce_A.getLength() - 1)
+        ChromosomeCrack_B = randint(0, IndividualToReproduce_B.getLength() - 1)
         
         i = 0
         while i <= ChromosomeCrack_A:
@@ -99,41 +114,39 @@ def createGeneration(lines, k, g, ActualGeneration, NumberOfLines):
         f.close
         ReproductionNumber += 1
 
-    i = NumberOfLines
-    while i < (NumberOfLines + GenerationLength):
+    NewGenerationLength = k
+    i = NumberOfLines - GenerationLength - 1
+    while i < (NumberOfLines - 1):
         TempIndividual = []
         for word in lines[i].split():
             TempIndividual.append(word)
 
-        if SelectionFunction(AdjustFunction(TempIndividual), SumOfAGeneration) >= 1:
+        if SelectionFunction(AdjustFunction(TempIndividual), AverageOfAGeneration) >= 1:
             f = open("Chromosomy.txt", "a", encoding = "utf-8")
             f.write("\n")
             for word in TempIndividual:
                 f.write(word)
                 f.write(" ")
             f.close
+            NewGenerationLength += 1
 
         i += 1
 
     f = open("Chromosomy.txt", "a", encoding = "utf-8")
     f.write("\n-----------------------------------")
     f.close()
+    return NewGenerationLength
 
-    return GenerationLength
-
-
+k = 2 # Number of reproductions in each generation
+# Each time programm is run a new generation is created
 
 try:
     f = open("Chromosomy.txt", "r", encoding = "utf-8")
 except IOError:
     print("Irrcorect path or file does not exist!")
 else:
-    print("File was successfully opened\n")
-    k = 2 # Number of reproductions in each generation
-    g = 1 # Number of generations to create
+    print("File was successfully opened")
+
     lines = f.readlines()
     f.close()
-    ActualGeneration = 0
-    NumberOfLines = 0
-    NumberOfLines = NumberOfLines + createGeneration(lines, k, g, ActualGeneration, NumberOfLines) + 1
-
+    createGeneration(lines, k, len(lines))
